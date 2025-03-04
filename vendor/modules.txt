@@ -51,6 +51,8 @@ github.com/kr/text
 # github.com/longhorn/backupstore v0.0.0-20250115162037-d046737d09dc
 ## explicit; go 1.22.7
 github.com/longhorn/backupstore
+github.com/longhorn/backupstore/backupbackingimage
+github.com/longhorn/backupstore/common
 github.com/longhorn/backupstore/logging
 github.com/longhorn/backupstore/types
 github.com/longhorn/backupstore/util
@@ -76,7 +78,7 @@ github.com/longhorn/go-spdk-helper/pkg/spdk/setup
 github.com/longhorn/go-spdk-helper/pkg/spdk/types
 github.com/longhorn/go-spdk-helper/pkg/types
 github.com/longhorn/go-spdk-helper/pkg/util
-# github.com/longhorn/types v0.0.0-20241225162202-00d3a5fd7502
+# github.com/longhorn/types v0.0.0-20241225162202-00d3a5fd7502 => github.com/chanyilin/types v0.0.0-20250224082431-c4a62de2a964
 ## explicit; go 1.22.7
 github.com/longhorn/types/pkg/generated/spdkrpc
 # github.com/mitchellh/go-ps v1.0.0

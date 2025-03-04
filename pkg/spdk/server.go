@@ -47,7 +47,8 @@ type Server struct {
 	replicaMap map[string]*Replica
 	engineMap  map[string]*Engine
 
-	backupMap map[string]*Backup
+	backupMap             map[string]*Backup
+	backupBackingImageMap map[string]*BackupBackingImageStatus
 
 	// We store BackingImage in each lvstore
 	backingImageMap map[string]*BackingImage
@@ -1776,5 +1777,82 @@ func (s *Server) BackingImageUnexpose(ctx context.Context, req *spdkrpc.BackingI
 	if err != nil {
 		return nil, grpcstatus.Error(grpccodes.Internal, errors.Wrapf(err, "failed to unexpose backing image %v in lvs %v", req.Name, req.LvsUuid).Error())
 	}
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Server) BackingImageBackupStatus(ctx context.Context, req *spdkrpc.BackingImageBackupStatusRequest) (ret *spdkrpc.BackingImageBackupStatusResponse, err error) {
+	backupBackingImageStatus, ok := s.backupBackingImageMap[req.BackupName]
+	if !ok {
+		return nil, grpcstatus.Errorf(grpccodes.NotFound, "cannot find backup backing image %v", req.BackupName)
+	}
+
+	return &spdkrpc.BackingImageBackupStatusResponse{
+		Progress:  int32(backupBackingImageStatus.Progress),
+		BackupUrl: backupBackingImageStatus.BackupURL,
+		Error:     backupBackingImageStatus.Error,
+		State:     string(backupBackingImageStatus.State),
+	}, nil
+}
+
+func (s *Server) BackingImageBackupCreate(ctx context.Context, req *spdkrpc.BackingImageBackupCreateRequest) (ret *emptypb.Empty, err error) {
+	if req.BackupName == "" {
+		return nil, grpcstatus.Error(grpccodes.InvalidArgument, "backing image backup name is required")
+	}
+	if req.Name == "" {
+		return nil, grpcstatus.Error(grpccodes.InvalidArgument, "backing image name is required")
+	}
+	if req.LvsUuid == "" {
+		return nil, grpcstatus.Error(grpccodes.InvalidArgument, "lvs UUID is required")
+	}
+
+	backupBackingImageName := req.Name
+	backupName := req.BackupName
+
+	backupType, err := butil.CheckBackupType(req.BackupTarget)
+	if err != nil {
+		return nil, err
+	}
+
+	err = butil.SetupCredential(backupType, req.Credential)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to setup credential of backup target %v for backup %v", req.BackupTarget, backupBackingImageName)
+		return nil, grpcstatus.Errorf(grpccodes.Internal, "%v", err)
+	}
+
+	s.Lock()
+	defer s.Unlock()
+
+	if _, ok := s.backupBackingImageMap[backupName]; ok {
+		return nil, grpcstatus.Errorf(grpccodes.AlreadyExists, "backup backing image %v already exists", backupBackingImageName)
+	}
+
+	backingImage, ok := s.backingImageMap[GetBackingImageSnapLvolName(req.Name, req.LvsUuid)]
+	if !ok {
+		return nil, grpcstatus.Errorf(grpccodes.NotFound, "cannot find backing image %v in disk %v during backup creation", req.Name, req.LvsUuid)
+	}
+
+	backupBackingImage, backupBackingImageStatus, backupConfig, err := DoBackupBackingImageInit(
+		s.spdkClient,
+		&CreateBackupBackingImageParameters{
+			BackupName:        req.BackupName,
+			BackingImageName:  req.Name,
+			Checksum:          req.Checksum,
+			DestURL:           req.BackupTarget,
+			CompressionMethod: req.CompressionMethod,
+			ConcurrentLimit:   req.ConcurrentLimit,
+			Labels:            req.Labels,
+			Parameters:        req.Parameters,
+			BackingImage:      backingImage,
+		},
+		s.portAllocator,
+	)
+
+	s.backupBackingImageMap[backupName] = backupBackingImageStatus
+	err = DoBackupCreate(backupBackingImage, backupBackingImageStatus, backupConfig)
+	if err != nil {
+		delete(s.backupBackingImageMap, backupName)
+		return nil, errors.Wrapf(err, "failed to create backup %v", req.Name)
+	}
+
 	return &emptypb.Empty{}, nil
 }

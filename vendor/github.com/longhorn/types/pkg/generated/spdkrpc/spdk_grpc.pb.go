@@ -70,6 +70,8 @@ const (
 	SPDKService_BackingImageWatch_FullMethodName                    = "/spdkrpc.SPDKService/BackingImageWatch"
 	SPDKService_BackingImageExpose_FullMethodName                   = "/spdkrpc.SPDKService/BackingImageExpose"
 	SPDKService_BackingImageUnexpose_FullMethodName                 = "/spdkrpc.SPDKService/BackingImageUnexpose"
+	SPDKService_BackingImageBackupCreate_FullMethodName             = "/spdkrpc.SPDKService/BackingImageBackupCreate"
+	SPDKService_BackingImageBackupStatus_FullMethodName             = "/spdkrpc.SPDKService/BackingImageBackupStatus"
 	SPDKService_DiskCreate_FullMethodName                           = "/spdkrpc.SPDKService/DiskCreate"
 	SPDKService_DiskDelete_FullMethodName                           = "/spdkrpc.SPDKService/DiskDelete"
 	SPDKService_DiskGet_FullMethodName                              = "/spdkrpc.SPDKService/DiskGet"
@@ -134,6 +136,8 @@ type SPDKServiceClient interface {
 	BackingImageWatch(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (SPDKService_BackingImageWatchClient, error)
 	BackingImageExpose(ctx context.Context, in *BackingImageGetRequest, opts ...grpc.CallOption) (*BackingImageExposeResponse, error)
 	BackingImageUnexpose(ctx context.Context, in *BackingImageGetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	BackingImageBackupCreate(ctx context.Context, in *BackingImageBackupCreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	BackingImageBackupStatus(ctx context.Context, in *BackingImageBackupStatusRequest, opts ...grpc.CallOption) (*BackingImageBackupStatusResponse, error)
 	DiskCreate(ctx context.Context, in *DiskCreateRequest, opts ...grpc.CallOption) (*Disk, error)
 	DiskDelete(ctx context.Context, in *DiskDeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DiskGet(ctx context.Context, in *DiskGetRequest, opts ...grpc.CallOption) (*Disk, error)
@@ -671,6 +675,24 @@ func (c *sPDKServiceClient) BackingImageUnexpose(ctx context.Context, in *Backin
 	return out, nil
 }
 
+func (c *sPDKServiceClient) BackingImageBackupCreate(ctx context.Context, in *BackingImageBackupCreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, SPDKService_BackingImageBackupCreate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sPDKServiceClient) BackingImageBackupStatus(ctx context.Context, in *BackingImageBackupStatusRequest, opts ...grpc.CallOption) (*BackingImageBackupStatusResponse, error) {
+	out := new(BackingImageBackupStatusResponse)
+	err := c.cc.Invoke(ctx, SPDKService_BackingImageBackupStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sPDKServiceClient) DiskCreate(ctx context.Context, in *DiskCreateRequest, opts ...grpc.CallOption) (*Disk, error) {
 	out := new(Disk)
 	err := c.cc.Invoke(ctx, SPDKService_DiskCreate_FullMethodName, in, out, opts...)
@@ -797,6 +819,8 @@ type SPDKServiceServer interface {
 	BackingImageWatch(*emptypb.Empty, SPDKService_BackingImageWatchServer) error
 	BackingImageExpose(context.Context, *BackingImageGetRequest) (*BackingImageExposeResponse, error)
 	BackingImageUnexpose(context.Context, *BackingImageGetRequest) (*emptypb.Empty, error)
+	BackingImageBackupCreate(context.Context, *BackingImageBackupCreateRequest) (*emptypb.Empty, error)
+	BackingImageBackupStatus(context.Context, *BackingImageBackupStatusRequest) (*BackingImageBackupStatusResponse, error)
 	DiskCreate(context.Context, *DiskCreateRequest) (*Disk, error)
 	DiskDelete(context.Context, *DiskDeleteRequest) (*emptypb.Empty, error)
 	DiskGet(context.Context, *DiskGetRequest) (*Disk, error)
@@ -961,6 +985,12 @@ func (UnimplementedSPDKServiceServer) BackingImageExpose(context.Context, *Backi
 }
 func (UnimplementedSPDKServiceServer) BackingImageUnexpose(context.Context, *BackingImageGetRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BackingImageUnexpose not implemented")
+}
+func (UnimplementedSPDKServiceServer) BackingImageBackupCreate(context.Context, *BackingImageBackupCreateRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BackingImageBackupCreate not implemented")
+}
+func (UnimplementedSPDKServiceServer) BackingImageBackupStatus(context.Context, *BackingImageBackupStatusRequest) (*BackingImageBackupStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BackingImageBackupStatus not implemented")
 }
 func (UnimplementedSPDKServiceServer) DiskCreate(context.Context, *DiskCreateRequest) (*Disk, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiskCreate not implemented")
@@ -1908,6 +1938,42 @@ func _SPDKService_BackingImageUnexpose_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SPDKService_BackingImageBackupCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BackingImageBackupCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SPDKServiceServer).BackingImageBackupCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SPDKService_BackingImageBackupCreate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SPDKServiceServer).BackingImageBackupCreate(ctx, req.(*BackingImageBackupCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SPDKService_BackingImageBackupStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BackingImageBackupStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SPDKServiceServer).BackingImageBackupStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SPDKService_BackingImageBackupStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SPDKServiceServer).BackingImageBackupStatus(ctx, req.(*BackingImageBackupStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SPDKService_DiskCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DiskCreateRequest)
 	if err := dec(in); err != nil {
@@ -2246,6 +2312,14 @@ var SPDKService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BackingImageUnexpose",
 			Handler:    _SPDKService_BackingImageUnexpose_Handler,
+		},
+		{
+			MethodName: "BackingImageBackupCreate",
+			Handler:    _SPDKService_BackingImageBackupCreate_Handler,
+		},
+		{
+			MethodName: "BackingImageBackupStatus",
+			Handler:    _SPDKService_BackingImageBackupStatus_Handler,
 		},
 		{
 			MethodName: "DiskCreate",

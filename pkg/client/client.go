@@ -717,6 +717,50 @@ func (c *SPDKClient) EngineBackupCreate(req *BackupCreateRequest) (*spdkrpc.Back
 	})
 }
 
+func (c *SPDKClient) BackingImageBackupCreate(backupName, name, uuid, lvsUUID, checksum, backupTargetURL string, labels, credential map[string]string, compressionMethod string, concurrentLimit int) error {
+	if backupName == "" || name == "" || uuid == "" || lvsUUID == "" || checksum == "" {
+		return fmt.Errorf("failed to create backup backing image: missing required parameter")
+	}
+
+	client := c.getSPDKServiceClient()
+	ctx, cancel := context.WithTimeout(context.Background(), GRPCServiceTimeout)
+	defer cancel()
+
+	labelSlice := []string{}
+	for k, v := range labels {
+		labelSlice = append(labelSlice, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	_, err := client.BackingImageBackupCreate(ctx, &spdkrpc.BackingImageBackupCreateRequest{
+		BackupName:        backupName,
+		Name:              name,
+		Uuid:              uuid,
+		LvsUuid:           lvsUUID,
+		Checksum:          checksum,
+		BackupTarget:      backupTargetURL,
+		Labels:            labelSlice,
+		Credential:        credential,
+		CompressionMethod: compressionMethod,
+		ConcurrentLimit:   int32(concurrentLimit),
+	})
+
+	return errors.Wrapf(err, "failed to create SPDK backing image backup %v, disk %v", name, lvsUUID)
+}
+
+func (c *SPDKClient) BackingImageBackupStatus(backupName string) (*spdkrpc.BackingImageBackupStatusResponse, error) {
+	if backupName == "" {
+		return nil, fmt.Errorf("failed to get backup backing image status: missing required parameter")
+	}
+
+	client := c.getSPDKServiceClient()
+	ctx, cancel := context.WithTimeout(context.Background(), GRPCServiceTimeout)
+	defer cancel()
+
+	return client.BackingImageBackupStatus(ctx, &spdkrpc.BackingImageBackupStatusRequest{
+		BackupName: backupName,
+	})
+}
+
 func (c *SPDKClient) ReplicaBackupCreate(req *BackupCreateRequest) (*spdkrpc.BackupCreateResponse, error) {
 	client := c.getSPDKServiceClient()
 	ctx, cancel := context.WithTimeout(context.Background(), GRPCServiceTimeout)
